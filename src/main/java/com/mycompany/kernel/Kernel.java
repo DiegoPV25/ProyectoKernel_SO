@@ -615,7 +615,7 @@ public class Kernel extends javax.swing.JFrame {
         tiempo.setText(relojS);        
 
         Vector<String> nombres;
-        conte.actualizarListas(conte.reloj);
+        conte.dispatchContenedor(conte.reloj);
 
         //READY
         nombres = new Vector<String>();
@@ -646,7 +646,14 @@ public class Kernel extends javax.swing.JFrame {
         ListaFinishedIn.setListData(nombres);
 
         
-
+        if(conte.listaRunning.size() > 0 && conte.listaRunning.get(0) != null) {
+            cpuNombreIn.setText(conte.listaRunning.get(0).nombre);
+            cpuTiempoIn.setText(""+conte.listaRunning.get(0).tiempoLlegada);
+            cpuAsignadoIn.setText(""+conte.listaRunning.get(0).cpuAsignado);
+            cpuEnvejecimientoIn.setText(""+conte.listaRunning.get(0).envejecimiento);
+            cpuRestanteIn.setText(""+conte.listaRunning.get(0).cpuRestante);
+            cpuQuantumIn.setText(""+conte.listaRunning.get(0).quantumRestante);
+        }
         
         
     }//GEN-LAST:event_EjecutarActionPerformed
@@ -721,12 +728,12 @@ public class Kernel extends javax.swing.JFrame {
 
         conte.metodoScheduling = dropdownScheduling.getSelectedItem().toString();
         if("SVC de Solicitud de I/O".equals(dropdownInterrupcion.getSelectedItem().toString()) ) conte.interrupcionSVC_IO();
-        if("SVC de Terminacion Normal".equals(dropdownInterrupcion.getSelectedItem().toString()) ) conte.interrupcionSVC_TNormal();
-        if("SVC de Solicitud de Fecha".equals(dropdownInterrupcion.getSelectedItem().toString()) ) conte.interrupcionSVC_Fecha();
-        if("Error de Programa".equals(dropdownInterrupcion.getSelectedItem().toString()) ) conte.interrupcionErrorPrograma();
-        if("Externa de Quantum Expirado".equals(dropdownInterrupcion.getSelectedItem().toString()) ) conte.interrupcionExterna_Quantum();        
-        if("Dispositivo de I/O".equals(dropdownInterrupcion.getSelectedItem().toString()) ) conte.interrupcionDispositivoIO();  
-        conte.actualizarListas(conte.reloj);
+        else if("SVC de Terminacion Normal".equals(dropdownInterrupcion.getSelectedItem().toString()) ) conte.interrupcionSVC_TNormal();
+        else if("SVC de Solicitud de Fecha".equals(dropdownInterrupcion.getSelectedItem().toString()) ) conte.interrupcionSVC_Fecha();
+        else if("Error de Programa".equals(dropdownInterrupcion.getSelectedItem().toString()) ) conte.interrupcionErrorPrograma();
+        else if("Externa de Quantum Expirado".equals(dropdownInterrupcion.getSelectedItem().toString()) ) conte.interrupcionExterna_Quantum();        
+        else if("Dispositivo de I/O".equals(dropdownInterrupcion.getSelectedItem().toString()) ) conte.interrupcionDispositivoIO();  
+        else conte.dispatchContenedor(conte.reloj);
         errorTexto.setForeground(Color.blue);
         errorTexto.setText(dropdownInterrupcion.getSelectedItem().toString()); 
         ListModel<String> nombreLista;

@@ -46,7 +46,7 @@ public void actualizarListas(int reloj) {
     void dispatchContenedor(int reloj) {
     if (metodoScheduling == "FIFO") { 
         int tiempoMenorllegada = reloj;
-        if(listaReady.isEmpty() == false) {
+        if(listaReady.isEmpty() == false && listaRunning.isEmpty() == true) {
             for (int i = 0; i < listaReady.size(); i++) {
                 if(listaReady.get(i).tiempoLlegada < tiempoMenorllegada) tiempoMenorllegada = listaReady.get(i).tiempoLlegada;
             }

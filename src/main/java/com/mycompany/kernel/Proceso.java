@@ -24,9 +24,10 @@ public class Proceso {
    }
    
    public void actualizarProcesoRunning(int reloj) {
-      this.cpuAsignado++;
-      this.envejecimiento = reloj - this.tiempoLlegada - this.ejecTotal;
-      this.cpuRestante = this.ejecTotal - this.cpuAsignado;
+        System.out.println("Pendejo");
+        this.cpuAsignado += 1;
+        this.envejecimiento = reloj - this.tiempoLlegada - this.cpuAsignado;
+        this.cpuRestante = this.ejecTotal - this.cpuAsignado;
    }
 
     public void actualizarProceso(int reloj) {
