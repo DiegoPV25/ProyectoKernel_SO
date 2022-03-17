@@ -28,6 +28,7 @@ public class Proceso {
         this.cpuAsignado += 1;
         this.envejecimiento = reloj - this.tiempoLlegada - this.cpuAsignado;
         this.cpuRestante = this.ejecTotal - this.cpuAsignado;
+        this.prioridad = (this.ejecTotal + this.envejecimiento) / this.ejecTotal;
    }
 
     public void actualizarProceso(int reloj) {

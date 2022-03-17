@@ -57,8 +57,31 @@ public void actualizarListas(int reloj) {
 
     }
     if (metodoScheduling == "Round Robin") { }
-    if (metodoScheduling == "SRT") { }
-    if (metodoScheduling == "HRRN") { }
+    if (metodoScheduling == "SRT") {
+        int srt = reloj;
+        boolean completado = false;
+        if(listaReady.isEmpty() == false && listaRunning.isEmpty() == true) {
+            for (int i = 0; i < listaReady.size(); i++) {
+                if(listaReady.get(i).cpuRestante < srt)  srt = listaReady.get(i).cpuRestante;
+            }
+            for (int i = 0; i < listaReady.size(); i++) {
+                if(listaReady.get(i).cpuRestante == srt && completado == false) {listaReady.get(i).status = "Running"; completado = true;}
+            }
+        }
+    }
+    if (metodoScheduling == "HRRN") { 
+        double hrrn = 0;
+        boolean completado = false;
+        if(listaReady.isEmpty() == false && listaRunning.isEmpty() == true) {
+            for (int i = 0; i < listaReady.size(); i++) {
+                if(listaReady.get(i).prioridad < hrrn)  hrrn = listaReady.get(i).prioridad;
+            }
+            for (int i = 0; i < listaReady.size(); i++) {
+                if(listaReady.get(i).prioridad == hrrn && completado == false) {listaReady.get(i).status = "Running"; completado = true;}
+            }
+        }
+    }
+    
 
     actualizarListas(reloj);
     }
@@ -75,19 +98,30 @@ public void actualizarListas(int reloj) {
     }
 
     void interrupcionSVC_Fecha() {
+    if(listaRunning.isEmpty() == false) {
+        listaRunning.get(0).status = "Blocked";
+    } 
     dispatchContenedor(reloj);
-
     }
 
     void interrupcionErrorPrograma() {
+    if(listaRunning.isEmpty() == false) {
+        listaRunning.get(0).status = "Finished";
+    }
     dispatchContenedor(reloj);
     }
 
     void interrupcionDispositivoIO() {
+    if(listaBlocked.isEmpty() == false) {
+        listaBlocked.get(0).status = "Ready";
+    } 
     dispatchContenedor(reloj);
     }
 
     void interrupcionExterna_Quantum() {
+    if(listaRunning.isEmpty() == false) {
+        listaRunning.get(0).status = "Ready";
+    } 
     dispatchContenedor(reloj);
     }
 
