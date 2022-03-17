@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class Proceso {
-       String nombre;
+   String nombre;
    int paginas;
    int ejecTotal;
    String status;
@@ -23,18 +23,15 @@ public class Proceso {
       this.status = "Ready";
    }
    
-   public void actualizarProceso(int reloj) {
+   public void actualizarProcesoRunning(int reloj) {
       this.cpuAsignado++;
       this.envejecimiento = reloj - this.tiempoLlegada - this.ejecTotal;
       this.cpuRestante = this.ejecTotal - this.cpuAsignado;
    }
-   
-   public void cambiarEstado(String status) {
-      this.status = status;
+
+    public void actualizarProceso(int reloj) {
+      this.envejecimiento = reloj - this.tiempoLlegada - this.ejecTotal;
    }
    
-   public void cambiarQuantum(int quantum) {
-      this.quantumRestante = quantum;
-   }
    
 }
