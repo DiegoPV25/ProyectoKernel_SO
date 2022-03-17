@@ -1,6 +1,8 @@
 package com.mycompany.kernel;
 import java.io.*;
 import java.util.ArrayList;
+import java.nio.file.*;
+import java.util.*;
 
 public class Contenedor {
 String ubicacion;
@@ -11,9 +13,11 @@ ArrayList<Proceso> listaRunning = new ArrayList<Proceso>();
 ArrayList<Proceso> listaBlocked = new ArrayList<Proceso>();
 ArrayList<Proceso> listaFinished = new ArrayList<Proceso>();
 int reloj = 0;
+int maxPaginas;
 
 public Contenedor(String path) {
    this.ubicacion = path;
+    leerArchivo();
 }
  
 public void actualizarListas(int reloj) {
@@ -62,7 +66,7 @@ public void actualizarListas(int reloj) {
         boolean completado = false;
         if(listaReady.isEmpty() == false && listaRunning.isEmpty() == true) {
             for (int i = 0; i < listaReady.size(); i++) {
-                if(listaReady.get(i).cpuRestante < srt)  srt = listaReady.get(i).cpuRestante;
+                if(listaReady.get(i).cpuRestante < srt) { System.out.println(listaReady.get(i).cpuRestante); srt = listaReady.get(i).cpuRestante; }
             }
             for (int i = 0; i < listaReady.size(); i++) {
                 if(listaReady.get(i).cpuRestante == srt && completado == false) {listaReady.get(i).status = "Running"; completado = true;}
@@ -93,6 +97,7 @@ public void actualizarListas(int reloj) {
     void interrupcionSVC_TNormal() {
     if(listaRunning.isEmpty() == false) {
         listaRunning.get(0).status = "Finished";
+    actualizarListas(reloj);
     }
     dispatchContenedor(reloj);
     }
@@ -100,6 +105,7 @@ public void actualizarListas(int reloj) {
     void interrupcionSVC_Fecha() {
     if(listaRunning.isEmpty() == false) {
         listaRunning.get(0).status = "Blocked";
+    actualizarListas(reloj);
     } 
     dispatchContenedor(reloj);
     }
@@ -107,6 +113,7 @@ public void actualizarListas(int reloj) {
     void interrupcionErrorPrograma() {
     if(listaRunning.isEmpty() == false) {
         listaRunning.get(0).status = "Finished";
+    actualizarListas(reloj);
     }
     dispatchContenedor(reloj);
     }
@@ -114,6 +121,7 @@ public void actualizarListas(int reloj) {
     void interrupcionDispositivoIO() {
     if(listaBlocked.isEmpty() == false) {
         listaBlocked.get(0).status = "Ready";
+    actualizarListas(reloj);
     } 
     dispatchContenedor(reloj);
     }
@@ -121,9 +129,48 @@ public void actualizarListas(int reloj) {
     void interrupcionExterna_Quantum() {
     if(listaRunning.isEmpty() == false) {
         listaRunning.get(0).status = "Ready";
+    actualizarListas(reloj);
     } 
     dispatchContenedor(reloj);
     }
 
+    void leerArchivo() {
+        Path archivo = Paths.get(this.ubicacion);
+
+    try (
+         InputStream entrada = Files.newInputStream(archivo);
+         BufferedReader lector = new BufferedReader(new InputStreamReader(entrada))) 
+         {
+    
+    String linea = null;
+    String[] valores;
+    linea = lector.readLine(); 
+    valores = linea.split(",");
+    maxPaginas = Integer.parseInt(valores[0]);
+    reloj = Integer.parseInt(valores[1]);
+
+    linea = lector.readLine();
+    int procArchivo = Integer.parseInt(linea);
+    ArrayList<Proceso> listaProcesosAgregar;
+    for(int i = 0; i < procArchivo; i++) {
+        linea = lector.readLine();
+        valores = linea.split(",");
+        int cantPag = Integer.parseInt(lector.readLine());
+        for(int j = 0; j < cantPag; j++) {
+            linea = lector.readLine();
+        }
+        Proceso p = new Proceso(("PROCESO "+(i+1)),cantPag,Integer.parseInt(valores[1]),Integer.parseInt(valores[0]));
+        if (valores[2].equals("1")) {p.status = "Running"; listaRunning.add(p);}
+        else if(valores[2].equals("2")) {p.status = "Blocked"; listaBlocked.add(p);}
+        else if(valores[2].equals("3")) {p.status = "Ready"; listaReady.add(p);}
+
+    }
+
+      } catch (IOException x) {
+        System.out.println(x); 
+        }
+    }
+
 }
+
 

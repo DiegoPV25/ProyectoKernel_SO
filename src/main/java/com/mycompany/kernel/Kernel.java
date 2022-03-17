@@ -18,12 +18,53 @@ import javax.swing.ListModel;
  */
 
 public class Kernel extends javax.swing.JFrame {
-
-    
-    Contenedor conte = new Contenedor("Ahh");
+    Contenedor conte = new Contenedor("pcb.txt");
+        String procesoLista = "";
+        String listaIndice = "";
     public Kernel() {
+        
         initComponents();
-           
+        System.out.println(ListaRunningIn.getSelectedIndex());
+        tiempo.setText(""+conte.reloj);
+        conte.actualizarListas(conte.reloj);
+        Vector<String> nombres;
+        //READY
+        nombres = new Vector<String>();
+        for (int x = 0; x < conte.listaReady.size(); x++){
+            nombres.add(conte.listaReady.get(x).nombre);
+        }
+        ListaRedyIn.setListData(nombres);
+
+        //RUNNING
+        nombres = new Vector<String>();
+        for (int x = 0; x < conte.listaRunning.size(); x++){
+            nombres.add(conte.listaRunning.get(x).nombre);
+        }
+        ListaRunningIn.setListData(nombres);
+
+        //BLOCKED
+        nombres = new Vector<String>();
+        for (int x = 0; x < conte.listaBlocked.size(); x++){
+            nombres.add(conte.listaBlocked.get(x).nombre);
+        }
+        ListaBlockedIn.setListData(nombres);
+
+        //FINISHED
+        nombres = new Vector<String>();
+        for (int x = 0; x < conte.listaFinished.size(); x++){
+            nombres.add(conte.listaFinished.get(x).nombre);
+        }
+        ListaFinishedIn.setListData(nombres);
+
+        
+        if(conte.listaRunning.size() > 0 && conte.listaRunning.get(0) != null) {
+            cpuNombreIn.setText(conte.listaRunning.get(0).nombre);
+            cpuTiempoIn.setText(""+conte.listaRunning.get(0).tiempoLlegada);
+            cpuAsignadoIn.setText(""+conte.listaRunning.get(0).cpuAsignado);
+            cpuEnvejecimientoIn.setText(""+conte.listaRunning.get(0).envejecimiento);
+            cpuRestanteIn.setText(""+conte.listaRunning.get(0).cpuRestante);
+            cpuQuantumIn.setText(""+conte.listaRunning.get(0).quantumRestante);
+        }
 
     }
 
@@ -77,6 +118,8 @@ public class Kernel extends javax.swing.JFrame {
         dropdownScheduling = new javax.swing.JComboBox<>();
         jLabel8 = new javax.swing.JLabel();
         TamQuantum = new javax.swing.JTextField();
+        jLabel15 = new javax.swing.JLabel();
+        jLabel16 = new javax.swing.JLabel();
         tiempo = new javax.swing.JLabel();
         Listos1 = new javax.swing.JPanel();
         jScrollPane2 = new javax.swing.JScrollPane();
@@ -99,6 +142,16 @@ public class Kernel extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentShown(java.awt.event.ComponentEvent evt) {
+                formComponentShown(evt);
+            }
+        });
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowActivated(java.awt.event.WindowEvent evt) {
+                formWindowActivated(evt);
+            }
+        });
 
         Ejecutar.setBackground(new java.awt.Color(153, 255, 153));
         Ejecutar.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
@@ -211,9 +264,18 @@ public class Kernel extends javax.swing.JFrame {
         Listos.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         Listos.setPreferredSize(new java.awt.Dimension(122, 187));
 
+        ListaRedyIn.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        ListaRedyIn.setFocusable(false);
+        ListaRedyIn.setSelectionBackground(new java.awt.Color(51, 153, 255));
+        ListaRedyIn.setValueIsAdjusting(true);
         ListaRedyIn.addComponentListener(new java.awt.event.ComponentAdapter() {
             public void componentShown(java.awt.event.ComponentEvent evt) {
                 ListaRedyInComponentShown(evt);
+            }
+        });
+        ListaRedyIn.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                ListaRedyInValueChanged(evt);
             }
         });
         jScrollPane1.setViewportView(ListaRedyIn);
@@ -353,6 +415,7 @@ public class Kernel extends javax.swing.JFrame {
 
         PanelCPU.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
 
+        dropdownScheduling.setFont(new java.awt.Font("Segoe UI Symbol", 0, 14)); // NOI18N
         dropdownScheduling.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FIFO", "Round Robin", "SRT", "HRRN" }));
         dropdownScheduling.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -362,7 +425,19 @@ public class Kernel extends javax.swing.JFrame {
 
         jLabel8.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
-        jLabel8.setText("Tam Quantum:");
+        jLabel8.setText("Tam. Quantum:");
+
+        TamQuantum.setEnabled(false);
+        TamQuantum.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                TamQuantumActionPerformed(evt);
+            }
+        });
+
+        jLabel15.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        jLabel15.setText("Algoritmo");
+
+        jLabel16.setText("Presione enter para reflejar el tamaño");
 
         javax.swing.GroupLayout PanelCPULayout = new javax.swing.GroupLayout(PanelCPU);
         PanelCPU.setLayout(PanelCPULayout);
@@ -371,23 +446,36 @@ public class Kernel extends javax.swing.JFrame {
             .addGroup(PanelCPULayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(PanelCPULayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(dropdownScheduling, 0, 198, Short.MAX_VALUE)
+                    .addComponent(dropdownScheduling, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(PanelCPULayout.createSequentialGroup()
-                        .addComponent(jLabel8, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGap(18, 18, 18)
+                        .addGap(13, 13, 13)
+                        .addComponent(jLabel8, javax.swing.GroupLayout.DEFAULT_SIZE, 179, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(TamQuantum, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, PanelCPULayout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jLabel16)
+                .addGap(20, 20, 20))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, PanelCPULayout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel15)
+                .addGap(93, 93, 93))
         );
         PanelCPULayout.setVerticalGroup(
             PanelCPULayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(PanelCPULayout.createSequentialGroup()
-                .addGap(33, 33, 33)
+                .addContainerGap()
+                .addComponent(jLabel15)
+                .addGap(8, 8, 8)
                 .addComponent(dropdownScheduling, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(PanelCPULayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel8)
                     .addComponent(TamQuantum, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(0, 56, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(jLabel16)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         tiempo.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
@@ -396,9 +484,16 @@ public class Kernel extends javax.swing.JFrame {
         Listos1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         Listos1.setPreferredSize(new java.awt.Dimension(122, 187));
 
+        ListaRunningIn.setFocusable(false);
+        ListaRunningIn.setSelectionBackground(new java.awt.Color(51, 153, 255));
         ListaRunningIn.addComponentListener(new java.awt.event.ComponentAdapter() {
             public void componentShown(java.awt.event.ComponentEvent evt) {
                 ListaRunningInComponentShown(evt);
+            }
+        });
+        ListaRunningIn.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                ListaRunningInValueChanged(evt);
             }
         });
         jScrollPane2.setViewportView(ListaRunningIn);
@@ -431,9 +526,16 @@ public class Kernel extends javax.swing.JFrame {
         Listos2.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         Listos2.setPreferredSize(new java.awt.Dimension(122, 187));
 
+        ListaBlockedIn.setFocusable(false);
+        ListaBlockedIn.setSelectionBackground(new java.awt.Color(51, 153, 255));
         ListaBlockedIn.addComponentListener(new java.awt.event.ComponentAdapter() {
             public void componentShown(java.awt.event.ComponentEvent evt) {
                 ListaBlockedInComponentShown(evt);
+            }
+        });
+        ListaBlockedIn.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                ListaBlockedInValueChanged(evt);
             }
         });
         jScrollPane3.setViewportView(ListaBlockedIn);
@@ -466,9 +568,17 @@ public class Kernel extends javax.swing.JFrame {
         Listos3.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
         Listos3.setPreferredSize(new java.awt.Dimension(122, 187));
 
+        ListaFinishedIn.setAutoscrolls(false);
+        ListaFinishedIn.setFocusable(false);
+        ListaFinishedIn.setSelectionBackground(new java.awt.Color(51, 153, 255));
         ListaFinishedIn.addComponentListener(new java.awt.event.ComponentAdapter() {
             public void componentShown(java.awt.event.ComponentEvent evt) {
                 ListaFinishedInComponentShown(evt);
+            }
+        });
+        ListaFinishedIn.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                ListaFinishedInValueChanged(evt);
             }
         });
         jScrollPane4.setViewportView(ListaFinishedIn);
@@ -577,12 +687,13 @@ public class Kernel extends javax.swing.JFrame {
                     .addComponent(tiempo)
                     .addComponent(Ejecutar)
                     .addComponent(botonInterrupcion))
-                .addGap(1, 1, 1)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 21, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(10, 10, 10)
-                        .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(11, 11, 11)
+                        .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(20, 20, 20)
+                        .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(Nuevo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -613,10 +724,8 @@ public class Kernel extends javax.swing.JFrame {
         conte.reloj++;
         String relojS = "" + conte.reloj;
         tiempo.setText(relojS);        
-
-        Vector<String> nombres;
         conte.dispatchContenedor(conte.reloj);
-
+        Vector<String> nombres;
         //READY
         nombres = new Vector<String>();
         for (int x = 0; x < conte.listaReady.size(); x++){
@@ -644,7 +753,7 @@ public class Kernel extends javax.swing.JFrame {
             nombres.add(conte.listaFinished.get(x).nombre);
         }
         ListaFinishedIn.setListData(nombres);
-
+        
         
         if(conte.listaRunning.size() > 0 && conte.listaRunning.get(0) != null) {
             cpuNombreIn.setText(conte.listaRunning.get(0).nombre);
@@ -663,8 +772,6 @@ public class Kernel extends javax.swing.JFrame {
     }//GEN-LAST:event_dropdownInterrupcionActionPerformed
 
     private void ListaRedyInComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_ListaRedyInComponentShown
-        // TODO add your handling code here:
-
     }//GEN-LAST:event_ListaRedyInComponentShown
 
     private void ListaRunningInComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_ListaRunningInComponentShown
@@ -688,11 +795,19 @@ public class Kernel extends javax.swing.JFrame {
     }//GEN-LAST:event_nombreProcesoActionPerformed
 
     private void agregarProcesosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_agregarProcesosActionPerformed
-        conte.metodoScheduling = dropdownScheduling.getSelectedItem().toString();
+        
         ListModel<String> nombreLista = ListaRedyIn.getModel();
         Vector<String> nombres = new Vector<String>();
+        
         for (int x = 0; x < conte.listaReady.size(); x++){
             nombres.add(conte.listaReady.get(x).nombre);
+        }
+
+        ListModel<String> nombreListaR = ListaRunningIn.getModel();
+        Vector<String> nombresR = new Vector<String>();
+        
+        for (int x = 0; x < conte.listaRunning.size(); x++){
+            nombresR.add(conte.listaRunning.get(x).nombre);
         }
         try{
             Proceso p = new Proceso(nombreProceso.getText().trim(), Integer.parseInt(nombrePagina.getText()), Integer.parseInt(nombreEjec.getText()), conte.reloj);
@@ -702,7 +817,9 @@ public class Kernel extends javax.swing.JFrame {
             conte.reloj++;
             String relojS = "" + conte.reloj;
             tiempo.setText(relojS);
+            conte.dispatchContenedor(conte.reloj);
             ListaRedyIn.setListData(nombres);
+            ListaRunningIn.setListData(nombresR);
             nombreProceso.setText("");
             nombrePagina.setText("");
             nombreEjec.setText("");
@@ -717,7 +834,9 @@ public class Kernel extends javax.swing.JFrame {
     }//GEN-LAST:event_agregarProcesosActionPerformed
 
     private void dropdownSchedulingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_dropdownSchedulingActionPerformed
-        // TODO add your handling code here:
+        conte.metodoScheduling = dropdownScheduling.getSelectedItem().toString();
+        if (dropdownScheduling.getSelectedItem().toString() != "Round Robin") TamQuantum.setEnabled(false);
+        else TamQuantum.setEnabled(true);
     }//GEN-LAST:event_dropdownSchedulingActionPerformed
 
     private void botonInterrupcionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonInterrupcionActionPerformed
@@ -771,15 +890,58 @@ public class Kernel extends javax.swing.JFrame {
         }
         ListaFinishedIn.setListData(nombres);
 
-        if(conte.listaRunning.size() > 0 && conte.listaRunning.get(0) != null) {
-            cpuNombreIn.setText(conte.listaRunning.get(0).nombre);
-            cpuTiempoIn.setText(""+conte.listaRunning.get(0).tiempoLlegada);
-            cpuAsignadoIn.setText(""+conte.listaRunning.get(0).cpuAsignado);
-            cpuEnvejecimientoIn.setText(""+conte.listaRunning.get(0).envejecimiento);
-            cpuRestanteIn.setText(""+conte.listaRunning.get(0).cpuRestante);
-            cpuQuantumIn.setText(""+conte.listaRunning.get(0).quantumRestante);
-        }
+        imprimirDatos();
+
     }//GEN-LAST:event_botonInterrupcionActionPerformed
+
+    private void TamQuantumActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TamQuantumActionPerformed
+        conte.tamanioQuantum = Integer.parseInt(TamQuantum.getText().trim());
+        System.out.println(conte.tamanioQuantum);
+    }//GEN-LAST:event_TamQuantumActionPerformed
+
+    private void formWindowActivated(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowActivated
+        
+    }//GEN-LAST:event_formWindowActivated
+
+    private void formComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_formComponentShown
+        
+    }//GEN-LAST:event_formComponentShown
+
+    private void ListaRedyInValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_ListaRedyInValueChanged
+        ListaRunningIn.clearSelection();
+        ListaBlockedIn.clearSelection();
+        ListaFinishedIn.clearSelection();
+        procesoLista = ListaRedyIn.getSelectedValue();
+        listaIndice = "Ready";
+        imprimirDatos();
+    }//GEN-LAST:event_ListaRedyInValueChanged
+
+    private void ListaRunningInValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_ListaRunningInValueChanged
+        ListaRedyIn.clearSelection();
+        ListaBlockedIn.clearSelection();
+        ListaFinishedIn.clearSelection();
+        procesoLista = ListaRunningIn.getSelectedValue();
+        listaIndice = "Running";
+        imprimirDatos();
+    }//GEN-LAST:event_ListaRunningInValueChanged
+
+    private void ListaBlockedInValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_ListaBlockedInValueChanged
+        ListaRedyIn.clearSelection();
+        ListaRunningIn.clearSelection();
+        ListaFinishedIn.clearSelection();
+        procesoLista = ListaBlockedIn.getSelectedValue();
+        listaIndice = "Blocked";
+        imprimirDatos();
+    }//GEN-LAST:event_ListaBlockedInValueChanged
+
+    private void ListaFinishedInValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_ListaFinishedInValueChanged
+        ListaRedyIn.clearSelection();
+        ListaBlockedIn.clearSelection();
+        ListaRunningIn.clearSelection();
+        procesoLista = ListaFinishedIn.getSelectedValue();
+        listaIndice = "Finished";
+        imprimirDatos();
+    }//GEN-LAST:event_ListaFinishedInValueChanged
 
     /**
      * @param args the command line arguments
@@ -823,6 +985,71 @@ public class Kernel extends javax.swing.JFrame {
         
     }
 
+    public void imprimirDatos() {
+        if(listaIndice == "Ready") {
+            for(int i = 0; i < conte.listaReady.size(); i++) {
+                if(conte.listaReady.get(i).nombre == procesoLista) {
+                    cpuNombreIn.setText(conte.listaReady.get(i).nombre);
+                    cpuTiempoIn.setText(""+conte.listaReady.get(i).tiempoLlegada);
+                    cpuAsignadoIn.setText(""+conte.listaReady.get(i).cpuAsignado);
+                    cpuEnvejecimientoIn.setText(""+conte.listaReady.get(i).envejecimiento);
+                    cpuRestanteIn.setText(""+conte.listaReady.get(i).cpuRestante);
+                    cpuQuantumIn.setText(""+conte.listaReady.get(i).quantumRestante);
+                }
+            }
+        }
+
+        if(listaIndice == "Running") {
+                for(int i = 0; i < conte.listaRunning.size(); i++) {
+                    if(conte.listaRunning.get(i).nombre == procesoLista) {
+                        cpuNombreIn.setText(conte.listaRunning.get(i).nombre);
+                        cpuTiempoIn.setText(""+conte.listaRunning.get(i).tiempoLlegada);
+                        cpuAsignadoIn.setText(""+conte.listaRunning.get(i).cpuAsignado);
+                        cpuEnvejecimientoIn.setText(""+conte.listaRunning.get(i).envejecimiento);
+                        cpuRestanteIn.setText(""+conte.listaRunning.get(i).cpuRestante);
+                        cpuQuantumIn.setText(""+conte.listaRunning.get(i).quantumRestante);
+                    }
+                }
+            }
+
+        if(listaIndice == "Blocked") {
+                for(int i = 0; i < conte.listaBlocked.size(); i++) {
+                    if(conte.listaBlocked.get(i).nombre == procesoLista) {
+                        cpuNombreIn.setText(conte.listaBlocked.get(i).nombre);
+                        cpuTiempoIn.setText(""+conte.listaBlocked.get(i).tiempoLlegada);
+                        cpuAsignadoIn.setText(""+conte.listaBlocked.get(i).cpuAsignado);
+                        cpuEnvejecimientoIn.setText(""+conte.listaBlocked.get(i).envejecimiento);
+                        cpuRestanteIn.setText(""+conte.listaBlocked.get(i).cpuRestante);
+                        cpuQuantumIn.setText(""+conte.listaBlocked.get(i).quantumRestante);
+                    }
+                }
+            }
+
+        if(listaIndice == "Finished") {
+                for(int i = 0; i < conte.listaFinished.size(); i++) {
+                    if(conte.listaFinished.get(i).nombre == procesoLista) {
+                        cpuNombreIn.setText(conte.listaFinished.get(i).nombre);
+                        cpuTiempoIn.setText(""+conte.listaFinished.get(i).tiempoLlegada);
+                        cpuAsignadoIn.setText(""+conte.listaFinished.get(i).cpuAsignado);
+                        cpuEnvejecimientoIn.setText(""+conte.listaFinished.get(i).envejecimiento);
+                        cpuRestanteIn.setText(""+conte.listaFinished.get(i).cpuRestante);
+                        cpuQuantumIn.setText(""+conte.listaFinished.get(i).quantumRestante);
+                    }
+                }
+            }
+
+        if(listaIndice == "") {
+                if(conte.listaRunning.size() > 0 && conte.listaRunning.get(0) != null) {
+                    cpuNombreIn.setText(conte.listaRunning.get(0).nombre);
+                    cpuTiempoIn.setText(""+conte.listaRunning.get(0).tiempoLlegada);
+                    cpuAsignadoIn.setText(""+conte.listaRunning.get(0).cpuAsignado);
+                    cpuEnvejecimientoIn.setText(""+conte.listaRunning.get(0).envejecimiento);
+                    cpuRestanteIn.setText(""+conte.listaRunning.get(0).cpuRestante);
+                    cpuQuantumIn.setText(""+conte.listaRunning.get(0).quantumRestante);
+                }
+        }
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton Ejecutar;
     private javax.swing.JList<String> ListaBlockedIn;
@@ -853,6 +1080,8 @@ public class Kernel extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel15;
+    private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
